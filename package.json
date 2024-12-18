@@ -4,12 +4,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-<<<<<<< HEAD
     "dev": "node api/app.js",
     "start": "node api/app.js"
-=======
-    "dev": "node api/app.js"
->>>>>>> c0426679e19c81f8ce840964d48e0007a7ca1afe
   },
   "author": "",
   "license": "ISC",
