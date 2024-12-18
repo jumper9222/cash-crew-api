@@ -1,11 +1,11 @@
 {
   "name": "cash-crew-api",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node api/app.js",
-    "start": "node api/app.js"
+    "dev": "node api/index.js",
+    "start": "node api/index.js"
   },
   "author": "",
   "license": "ISC",
