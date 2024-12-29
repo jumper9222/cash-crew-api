@@ -40,13 +40,26 @@ app.get("/", (req, res) => {
     res.send("If you see this, the API is working!")
 })
 
+//Fetch all transactions and splits associated to user
 app.get("/transactions/:user_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id } = req.params;
     try {
-        const transactions = await client.query("SELECT * FROM transactions WHERE user_id = $1", [user_id])
-        const splits = await client.query("SELECT * FROM splits WHERE user_id = $1", [user_id])
-        res.status(200).json({ transactions: transactions.rows, splits: splits.rows })
+        // const transactions = await client.query(
+        //     `SELECT * FROM transactions WHERE user_id = $1`, 
+        //     [user_id])
+        // const splits = await client.query(
+        //     `SELECT * FROM splits WHERE user_id = $1`, 
+        //     [user_id])
+        const response = await client.query(
+            `SELECT *
+            FROM transactions t
+            JOIN splits s ON t.id = s.transaction_id
+            WHERE t.user_id = $1 
+            OR s.user_id = $1`,
+            [user_id]
+        )
+        res.status(200).json(response.rows)
     } catch (error) {
         console.error("Error executing query", error.stack)
         res.status(500).json({ error: "Error fetching transactions" })
@@ -69,6 +82,7 @@ app.get("/comments/:transaction_id", async (req, res) => {
     }
 })
 
+//Post transaction and post splits conditionally
 app.post("/transaction/:user_id", async (req, res) => {
     const { user_id } = req.params;
     const {
@@ -77,18 +91,40 @@ app.post("/transaction/:user_id", async (req, res) => {
         date,
         totalAmount,
         currency,
-        dateModified,
-        category
+        category,
+        isSplit,
+        splits
     } = req.body;
     const client = await pool.connect();
     try {
-        const response = await client.query(
-            "INSERT INTO transactions (title, description, date, total_amount, currency, date_modified, user_id, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
-            [title, description, date, totalAmount, currency, dateModified, user_id, category]
+        await client.query('BEGIN')
+        const transactionResponse = await client.query(
+            `INSERT INTO transactions (title, description, date, total_amount, currency, user_id, category, is_split) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+                RETURNING *`,
+            [title, description, date, totalAmount, currency, user_id, category, isSplit]
         );
-        res.status(201).json(response.rows[0]);
+
+        let splitsResponse = [];
+
+        if (splits.length > 1) {
+            const transaction_id = transactionResponse.rows[0].id
+
+            splitsResponse = await Promise.all(splits.map((split) => {
+                const { user_id, split_amount, currency, category } = split;
+                return client.query(
+                    `INSERT INTO splits (user_id, transaction_id, split_amount, currency, category)
+                    VALUES ($1, $2, $3, $4, $5)
+                    RETURNING *`,
+                    [user_id, transaction_id, split_amount, currency, category])
+            }));
+        }
+        await client.query('COMMIT')
+        res.status(201).json({ transaction: transactionResponse.rows[0], splits: splitsResponse.rows })
     } catch (error) {
-        res.status(500).send(error)
+        await client.query('ROLLBACK')
+        console.error('Error executing transaction, transaction rolled back', error)
+        res.status(500).json({ message: 'Error executing transaction, transaction rolled back', error })
     } finally {
         client.release();
     }
@@ -147,7 +183,7 @@ app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
         currency,
         dateModified,
         category,
-        splits
+        // splits
     } = req.body;
     const client = await pool.connect();
     try {
@@ -155,26 +191,69 @@ app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
             "UPDATE transactions SET title = $1, description = $2, date = $3, total_amount = $4, currency = $5, date_modified = $6, category = $7 WHERE user_id = $8 AND id = $9 RETURNING *",
             [title, description, date, totalAmount, currency, dateModified, category, user_id, transaction_id]
         );
-        let updatedSplits = []
-        if (splits.length > 0) {
-            updatedSplits = await Promise.all(splits.map(async (split) => {
-                const { split_amount, currency, category, splitId } = split
-                try {
-                    const response = await client.query(
-                        'UPDATE splits SET split_amount = $1, currency = $2, category = $3 WHERE id = $4 RETURNING *',
-                        [split_amount, currency, category, splitId])
-                    console.log("Split updated successfully")
-                    return response.rows[0]
-                } catch (error) {
-                    console.error("Error updating split", error)
-                    throw error
-                }
-            }));
-        }
-        res.status(201).json({ transaction: transaction.rows[0], splits: updatedSplits });
+        // let updatedSplits = []
+        // if (splits.length > 0) {
+        //     updatedSplits = await Promise.all(splits.map(async (split) => {
+        //         const { split_amount, currency, category, splitId } = split
+        //         try {
+        //             const response = await client.query(
+        //                 'UPDATE splits SET split_amount = $1, currency = $2, category = $3 WHERE id = $4 RETURNING *',
+        //                 [split_amount, currency, category, splitId])
+        //             console.log("Split updated successfully")
+        //             return response.rows[0]
+        //         } catch (error) {
+        //             console.error("Error updating split", error)
+        //             throw error
+        //         }
+        //     }));
+        // }
+        res.status(201).json({ transaction: transaction.rows[0]/*, splits: updatedSplits*/ });
     } catch (error) {
         console.error("Error updating transaction", error)
         res.status(500).send(error)
+    } finally {
+        client.release();
+    }
+})
+
+app.put("/transaction/split/:user_id/:transaction_id", async (req, res) => {
+    const { user_id, transaction_id } = req.params;
+    const splits = request.body;
+    const client = pool.connect();
+
+    try {
+        const transactionExists = await client.query(
+            'SELECT * FROM transactions WHERE id = $1 AND user_id = $2'
+            [transaction_id, user_id]
+        );
+        const splitsExists = await client.query(
+            'SELECT * FROM splits WHERE transaction_id = $1'
+            [transaction_id]
+        );
+
+        if (transactionExists.length > 0 && splitsExists.length > 0) {
+            try {
+                const response = await Promise.all(splits.map(async split => {
+                    const { split_amount, currency, category, splitId } = split;
+                    try {
+                        const response = await client.query(
+                            'UPDATE splits SET split_amount = $1, currency = $2, category = $3 WHERE id = $4 RETURNING *',
+                            [split_amount, currency, category, splitId])
+                        console.log("Split updated successfully")
+                        return response.rows[0]
+                    } catch (error) {
+                        console.error("Error updating split", error)
+                        throw error
+                    }
+                }))
+                res.status(201).json(response.rows);
+            } catch (error) {
+                console.error("Error updating splits", error)
+                throw error
+            }
+        }
+    } catch (error) {
+        console.error("Error finding transactions and splits or error updating splits", error)
     } finally {
         client.release();
     }
