@@ -45,18 +45,46 @@ app.get("/transactions/:user_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id } = req.params;
     try {
-        // const transactions = await client.query(
-        //     `SELECT * FROM transactions WHERE user_id = $1`, 
-        //     [user_id])
-        // const splits = await client.query(
-        //     `SELECT * FROM splits WHERE user_id = $1`, 
-        //     [user_id])
         const response = await client.query(
-            `SELECT *
+            `SELECT 
+                t.id AS transaction_id, 
+                t.title, 
+                t.description, 
+                t.date, 
+                t.total_amount,
+                t.currency,
+                t.user_id AS paid_by,
+                t.category,
+                t.is_split,
+                s.id AS split_id,
+                s.user_id AS split_uid,
+                s.split_amount, 
+                s.category AS split_category
+            FROM transactions t
+            LEFT JOIN splits s ON t.id = s.transaction_id
+            WHERE t.user_id = $1 
+            
+            UNION ALL
+            
+            SELECT 
+                t.id AS transaction_id, 
+                t.title, 
+                t.description, 
+                t.date, 
+                t.total_amount,
+                t.currency,
+                t.user_id AS paid_by,
+                t.category,
+                t.is_split,
+                s.id AS split_id,
+                s.user_id AS split_uid,
+                s.split_amount, 
+                s.category AS split_category
             FROM transactions t
             JOIN splits s ON t.id = s.transaction_id
-            WHERE t.user_id = $1 
-            OR s.user_id = $1`,
+            LEFT JOIN splits s1 ON t.id = s1.transaction_id
+            WHERE s1.user_id = $1
+            AND t.user_id <> $1`,
             [user_id]
         )
         res.status(200).json(response.rows)
@@ -100,15 +128,24 @@ app.post("/transaction/:user_id", async (req, res) => {
         await client.query('BEGIN')
         const transactionResponse = await client.query(
             `INSERT INTO transactions (title, description, date, total_amount, currency, user_id, category, is_split) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-                RETURNING *`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+            RETURNING 
+                id AS transaction_id,
+                title, 
+                description,
+                date, 
+                total_amount,
+                currency,
+                user_id as paid_by,
+                category, 
+                is_split`,
             [title, description, date, totalAmount, currency, user_id, category, isSplit]
         );
 
         let splitsResponse = [];
 
         if (splits.length > 1) {
-            const transaction_id = transactionResponse.rows[0].id
+            const transaction_id = transactionResponse.rows[0].transaction_id
 
             splitsResponse = await Promise.all(splits.map((split) => {
                 const { user_id, split_amount, currency, category } = split;
@@ -117,10 +154,11 @@ app.post("/transaction/:user_id", async (req, res) => {
                     VALUES ($1, $2, $3, $4, $5)
                     RETURNING *`,
                     [user_id, transaction_id, split_amount, currency, category])
+                    .then((response) => response.rows[0]);
             }));
         }
         await client.query('COMMIT')
-        res.status(201).json({ transaction: transactionResponse.rows[0], splits: splitsResponse.rows })
+        res.status(201).json({ transaction: transactionResponse.rows[0], splits: splitsResponse })
     } catch (error) {
         await client.query('ROLLBACK')
         console.error('Error executing transaction, transaction rolled back', error)
@@ -130,6 +168,7 @@ app.post("/transaction/:user_id", async (req, res) => {
     }
 })
 
+//Post Split
 app.post("/split/:transaction_id", async (req, res) => {
     const { transaction_id } = req.params;
     const {
@@ -153,6 +192,7 @@ app.post("/split/:transaction_id", async (req, res) => {
     }
 })
 
+//Post comment
 app.post("/comment/:transaction_id", async (req, res) => {
     const { transaction_id } = req.params;
     const {
@@ -173,6 +213,7 @@ app.post("/comment/:transaction_id", async (req, res) => {
     }
 })
 
+//Update transaction
 app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
     const { user_id, transaction_id } = req.params;
     const {
@@ -183,32 +224,56 @@ app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
         currency,
         dateModified,
         category,
-        // splits
+        paidBy,
+        isSplit,
+        splits
     } = req.body;
     const client = await pool.connect();
     try {
+        await client.query('BEGIN')
         const transaction = await client.query(
-            "UPDATE transactions SET title = $1, description = $2, date = $3, total_amount = $4, currency = $5, date_modified = $6, category = $7 WHERE user_id = $8 AND id = $9 RETURNING *",
-            [title, description, date, totalAmount, currency, dateModified, category, user_id, transaction_id]
+            `UPDATE transactions 
+            SET 
+                title = $1, 
+                description = $2, 
+                date = $3, 
+                total_amount = $4, 
+                currency = $5, 
+                date_modified = $6, 
+                category = $7, 
+                user_id = $8, 
+                is_split = $9 
+            WHERE user_id = $10 AND id = $11 RETURNING *`,
+            [title, description, date, totalAmount, currency, dateModified, category, paidBy, isSplit, user_id, transaction_id]
         );
-        // let updatedSplits = []
-        // if (splits.length > 0) {
-        //     updatedSplits = await Promise.all(splits.map(async (split) => {
-        //         const { split_amount, currency, category, splitId } = split
-        //         try {
-        //             const response = await client.query(
-        //                 'UPDATE splits SET split_amount = $1, currency = $2, category = $3 WHERE id = $4 RETURNING *',
-        //                 [split_amount, currency, category, splitId])
-        //             console.log("Split updated successfully")
-        //             return response.rows[0]
-        //         } catch (error) {
-        //             console.error("Error updating split", error)
-        //             throw error
-        //         }
-        //     }));
-        // }
-        res.status(201).json({ transaction: transaction.rows[0]/*, splits: updatedSplits*/ });
+        let updatedSplits = []
+        if (splits.length > 0) {
+            updatedSplits = await Promise.all(splits.map(async (split) => {
+                const { split_amount, currency, category, splitId, userId } = split
+                try {
+                    const response = await client.query(
+                        `UPDATE splits 
+                        SET split_amount = $1, currency = $2, category = $3 
+                        WHERE id = $4 AND user_id = $5 
+                        RETURNING
+                            id,
+                            split_amount AS amount,
+                            user_id, 
+                            category
+                            `,
+                        [split_amount, currency, category, splitId, userId])
+                    console.log("Split updated successfully")
+                    return response.rows[0]
+                } catch (error) {
+                    console.error("Error updating split", error)
+                    throw error
+                }
+            }));
+        }
+        await client.query('COMMIT')
+        res.status(201).json({ transaction: transaction.rows[0], splits: updatedSplits });
     } catch (error) {
+        await client.query('ROLLBACK')
         console.error("Error updating transaction", error)
         res.status(500).send(error)
     } finally {
@@ -280,6 +345,7 @@ app.put("/comment/:transaction_id/:comment_id", async (req, res) => {
     }
 })
 
+//Delete transaction
 app.delete("/transaction/:user_id/:transaction_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id, transaction_id } = req.params;
@@ -287,7 +353,7 @@ app.delete("/transaction/:user_id/:transaction_id", async (req, res) => {
         const response = await client.query(
             "DELETE FROM transactions WHERE user_id = $1 AND id = $2 RETURNING *",
             [user_id, transaction_id])
-        res.status(200).json(response.rows)
+        res.status(200).json(response.rows[0])
     } catch (error) {
         console.error("Error deleting transaction and/or splits", error)
         res.status(500).send(error);
