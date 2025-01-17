@@ -147,7 +147,7 @@ app.post("/transaction/:user_id", async (req, res) => {
         if (splits.length > 1) {
             const transaction_id = transactionResponse.rows[0].transaction_id
 
-            splitsResponse = await Promise.all(splits.map((split) => {
+            splitsResponse = await Promise.all(splits.map(async (split) => {
                 const { user_id, split_amount, currency, category } = split;
                 return client.query(
                     `INSERT INTO splits (user_id, transaction_id, split_amount, currency, category)
