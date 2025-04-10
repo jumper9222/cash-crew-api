@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
 app.get("/transactions/:user_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id } = req.params;
-    const { latestDateModified } = req.query;
+    const { latestDateModified } = req.body;
     try {
         const response = await client.query(
             `SELECT 
