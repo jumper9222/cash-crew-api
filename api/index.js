@@ -66,7 +66,7 @@ app.get("/transactions/:user_id", async (req, res) => {
             FROM transactions t
             LEFT JOIN splits s ON t.id = s.transaction_id
             WHERE t.user_id = $1 
-            AND t.date_modified > $2::timestampz
+            AND t.date_modified > $2::timestamp
             
             UNION ALL
             
@@ -91,8 +91,7 @@ app.get("/transactions/:user_id", async (req, res) => {
             LEFT JOIN splits s1 ON t.id = s1.transaction_id
             WHERE s1.user_id = $1
             AND t.user_id <> $1
-            AND t.date_modified > $2::timestampz
-            `,
+            AND t.date_modified > $2::timestamp`,
             [user_id, latestDateModified]
         )
         res.status(200).json(response.rows)
