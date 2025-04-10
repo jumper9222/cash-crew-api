@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
 app.get("/transactions/:user_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id } = req.params;
-    const { latestDateModified } = req.body;
+    const { latestDateModified } = req.query;
     try {
         const response = await client.query(
             `SELECT 
@@ -66,7 +66,7 @@ app.get("/transactions/:user_id", async (req, res) => {
             FROM transactions t
             LEFT JOIN splits s ON t.id = s.transaction_id
             WHERE t.user_id = $1 
-            AND t.date_modified > $2::timestamp
+            AND t.date_modified > $2::timestampz
             
             UNION ALL
             
@@ -91,6 +91,7 @@ app.get("/transactions/:user_id", async (req, res) => {
             LEFT JOIN splits s1 ON t.id = s1.transaction_id
             WHERE s1.user_id = $1
             AND t.user_id <> $1
+            AND t.date_modified > $2::timestampz
             `,
             [user_id, latestDateModified]
         )
