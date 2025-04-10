@@ -44,6 +44,7 @@ app.get("/", (req, res) => {
 app.get("/transactions/:user_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id } = req.params;
+    const { latestDateModified } = req.body;
     try {
         const response = await client.query(
             `SELECT 
@@ -88,8 +89,9 @@ app.get("/transactions/:user_id", async (req, res) => {
             JOIN splits s ON t.id = s.transaction_id
             LEFT JOIN splits s1 ON t.id = s1.transaction_id
             WHERE s1.user_id = $1
-            AND t.user_id <> $1`,
-            [user_id]
+            AND t.user_id <> $1
+            AND t.date_modified > $2`,
+            [user_id, latestDateModified]
         )
         res.status(200).json(response.rows)
     } catch (error) {
