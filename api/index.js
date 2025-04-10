@@ -55,33 +55,35 @@ app.get("/transactions/:user_id", async (req, res) => {
                 t.currency,
                 t.user_id AS paid_by,
                 t.category,
+                t.date_modified,
                 t.is_split,
                 t.photo_url,
                 s.id AS split_id,
                 s.user_id AS split_uid,
                 s.split_amount, 
                 s.category AS split_category
-            FROM transactions t
+                FROM transactions t
             LEFT JOIN splits s ON t.id = s.transaction_id
             WHERE t.user_id = $1 
             
             UNION ALL
             
             SELECT 
-                t.id AS transaction_id, 
-                t.title, 
-                t.description, 
-                t.date, 
-                t.total_amount,
-                t.currency,
-                t.user_id AS paid_by,
-                t.category,
-                t.is_split,
-                t.photo_url,
-                s.id AS split_id,
-                s.user_id AS split_uid,
-                s.split_amount, 
-                s.category AS split_category
+            t.id AS transaction_id, 
+            t.title, 
+            t.description, 
+            t.date, 
+            t.total_amount,
+            t.currency,
+            t.user_id AS paid_by,
+            t.category,
+            t.date_modified,
+            t.is_split,
+            t.photo_url,
+            s.id AS split_id,
+            s.user_id AS split_uid,
+            s.split_amount, 
+            s.category AS split_category
             FROM transactions t
             JOIN splits s ON t.id = s.transaction_id
             LEFT JOIN splits s1 ON t.id = s1.transaction_id
