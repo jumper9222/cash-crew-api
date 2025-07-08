@@ -68,10 +68,15 @@ app.get("/transactions/:user_id", async (req, res) => {
             FROM transactions t
             LEFT JOIN splits s ON t.id = s.transaction_id
             WHERE t.date_modified > $2::timestamp
-            AND (
-                t.user_id = $1 OR 
-                t.paid_by = $1 OR 
-                s.user_id = $1
+            AND t.id IN (
+                SELECT DISTINCT t2.id 
+                FROM transactions t2
+                LEFT JOIN splits s2 ON t2.id = s2.transaction_id
+                WHERE (
+                    t2.user_id = $1 OR 
+                    t2.paid_by = $1 OR 
+                    s2.user_id = $1
+                )
             )
             ORDER BY t.date DESC`,
             [user_id, latestDateModified]
