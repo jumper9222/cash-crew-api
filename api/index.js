@@ -45,16 +45,18 @@ app.get("/transactions/:user_id", async (req, res) => {
     const client = await pool.connect();
     const { user_id } = req.params;
     const { latestDateModified } = req.query;
+    
     try {
         const response = await client.query(
-            `SELECT 
+            `SELECT DISTINCT
             t.id AS transaction_id, 
             t.title, 
             t.description, 
             t.date, 
             t.total_amount,
             t.currency,
-            t.user_id AS paid_by,
+            t.user_id,
+            t.paid_by,
             t.category,
             t.date_modified,
             t.is_split,
@@ -65,33 +67,13 @@ app.get("/transactions/:user_id", async (req, res) => {
             s.category AS split_category
             FROM transactions t
             LEFT JOIN splits s ON t.id = s.transaction_id
-            WHERE t.user_id = $1 
-            AND t.date_modified > $2::timestamp
-            
-            UNION ALL
-            
-            SELECT 
-            t.id AS transaction_id, 
-            t.title, 
-            t.description, 
-            t.date, 
-            t.total_amount,
-            t.currency,
-            t.user_id AS paid_by,
-            t.category,
-            t.date_modified,
-            t.is_split,
-            t.photo_url,
-            s.id AS split_id,
-            s.user_id AS split_uid,
-            s.split_amount, 
-            s.category AS split_category
-            FROM transactions t
-            JOIN splits s ON t.id = s.transaction_id
-            LEFT JOIN splits s1 ON t.id = s1.transaction_id
-            WHERE s1.user_id = $1
-            AND t.user_id <> $1
-            AND t.date_modified > $2::timestamp`,
+            WHERE t.date_modified > $2::timestamp
+            AND (
+                t.user_id = $1 OR 
+                t.paid_by = $1 OR 
+                s.user_id = $1
+            )
+            ORDER BY t.date DESC`,
             [user_id, latestDateModified]
         )
         res.status(200).json(response.rows)
@@ -129,18 +111,29 @@ app.post("/transaction/:user_id", async (req, res) => {
         category,
         isSplit,
         photoURL,
-        splits
+        splits,
+        paidBy
     } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN')
         const transactionResponse = await client.query(
-            `INSERT INTO transactions (title, description, date, total_amount, currency, user_id, category, is_split, photo_url) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+            `INSERT INTO transactions (
+            title, 
+            description, 
+            date, 
+            total_amount, 
+            currency, 
+            user_id, 
+            category, 
+            is_split, 
+            photo_url,
+            paid_by) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
             RETURNING *,
                 id AS transaction_id,
-                user_id as paid_by`,
-            [title, description, date, totalAmount, currency, user_id, category, isSplit, photoURL]
+                user_id as created_by`,
+            [title, description, date, totalAmount, currency, user_id, category, isSplit, photoURL, paidBy]
         );
 
         let splitsResponse = [];
@@ -149,12 +142,12 @@ app.post("/transaction/:user_id", async (req, res) => {
             const transaction_id = transactionResponse.rows[0].transaction_id
 
             splitsResponse = await Promise.all(splits.map(async (split) => {
-                const { user_id, split_amount, currency, category } = split;
+                const { userId, amount, category } = split;
                 return client.query(
                     `INSERT INTO splits (user_id, transaction_id, split_amount, currency, category)
                     VALUES ($1, $2, $3, $4, $5)
                     RETURNING *`,
-                    [user_id, transaction_id, split_amount, currency, category])
+                    [userId, transaction_id, amount, currency, category])
                     .then((response) => response.rows[0]);
             }));
         }
@@ -215,8 +208,8 @@ app.post("/transaction/:user_id", async (req, res) => {
 // })
 
 //Update transaction
-app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
-    const { user_id, transaction_id } = req.params;
+app.put("/transaction/:transaction_id", async (req, res) => {
+    const { transaction_id } = req.params;
     const {
         title,
         description,
@@ -225,6 +218,7 @@ app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
         currency,
         dateModified,
         category,
+        createdBy,
         paidBy,
         isSplit,
         photoURL,
@@ -243,11 +237,11 @@ app.put("/transaction/:user_id/:transaction_id", async (req, res) => {
                 currency = $5, 
                 date_modified = $6, 
                 category = $7, 
-                user_id = $8, 
-                is_split = $9,
-                photo_url = $10 
+                is_split = $8,
+                photo_url = $9,
+                paid_by = $10
             WHERE user_id = $11 AND id = $12 RETURNING *`,
-            [title, description, date, totalAmount, currency, dateModified, category, paidBy, isSplit, photoURL, user_id, transaction_id]
+            [title, description, date, totalAmount, currency, dateModified, category, isSplit, photoURL, paidBy, createdBy, transaction_id]
         );
         let updatedSplits = []
         if (splits.length > 0) {
