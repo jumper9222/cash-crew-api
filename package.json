@@ -4,8 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node api/index.js",
-    "start": "node api/index.js"
+    "dev": "nodemon --exec ts-node api/index.js",
+    "dev:once": "ts-node api/index.js",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:dev": "ts-node api/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +22,18 @@
     "vercel": "^39.2.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.13",
+    "@types/pg": "^8.15.4",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "nodemonConfig": {
+    "watch": ["api/"],
+    "ext": "js,ts,json",
+    "ignore": ["node_modules/", "dist/"],
+    "exec": "ts-node api/index.js"
   }
 }
