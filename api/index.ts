@@ -44,7 +44,7 @@ app.get("/transactions/:user_id", fetchTransactions);
 app.post("/transaction/:user_id", postTransaction); // Handle singular form for backward compatibility
 
 // Update transaction and update/create/delete splits conditionally
-app.put("/transaction/:user_id/:transaction_id", updateTransaction); // Handle singular form for backward compatibility
+app.put("/transaction/:transaction_id", updateTransaction); // Handle singular form for backward compatibility
 
 // Delete transaction and delete splits conditionally
 app.delete("/transaction/:user_id/:transaction_id", deleteTransaction); // Handle singular form for backward compatibility
