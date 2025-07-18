@@ -1,11 +1,19 @@
-require("dotenv").config();
-const { Pool } = require("pg");
-let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
+import dotenv from 'dotenv';
+import { Pool } from 'pg';
 
-const pool = new Pool({
+dotenv.config();
+
+const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
+
+if (!PGHOST || !PGDATABASE || !PGUSER || !PGPASSWORD) {
+  console.error('Missing required database environment variables');
+  throw new Error('Missing required database environment variables');
+}
+
+export const pool = new Pool({
   host: PGHOST,
   database: PGDATABASE,
-  username: PGUSER,
+  user: PGUSER,
   password: PGPASSWORD,
   port: 5432,
   ssl: {
@@ -13,4 +21,12 @@ const pool = new Pool({
   },
 });
 
-module.exports = { pool };
+// Test the database connection
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});

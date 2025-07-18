@@ -1,4 +1,4 @@
-const { pool: dbPool } = require("../config/database");
+import { pool as dbPool } from "../config/database";
 import { Request, Response } from "express";
 
 const fetchTransactions = async (req: Request, res: Response) => {
@@ -253,8 +253,8 @@ const deleteTransaction = async (req: Request, res: Response) => {
   const client = await dbPool.connect();
 
   // Extracting user_id and transaction_id from request parameters
-  const { user_id, transaction_id} = req.params;
-  const {isSplit} = req.query;
+  const { user_id, transaction_id } = req.params;
+  const { isSplit } = req.query;
   try {
     console.log("Deleting transaction", transaction_id, isSplit, user_id);
     await client.query("BEGIN");
@@ -288,7 +288,7 @@ const deleteTransaction = async (req: Request, res: Response) => {
   }
 };
 
-module.exports = {
+export {
   fetchTransactions,
   postTransaction,
   updateTransaction,
