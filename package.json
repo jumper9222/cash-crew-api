@@ -1,12 +1,12 @@
 {
   "name": "cash-crew-api",
   "version": "1.0.0",
-  "main": "dist/api/index.js",
+  "main": "dist/api/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node dist/api/index.js",
+    "start": "node dist/api/index.ts",
     "vercel-build": "npm run build"
   },
   "author": "",
@@ -36,6 +36,6 @@
       "node_modules/",
       "dist/"
     ],
-    "exec": "ts-node api/index.js"
+    "exec": "ts-node api/index.ts"
   }
 }
