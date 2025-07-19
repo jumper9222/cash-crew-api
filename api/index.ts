@@ -12,7 +12,7 @@ const app = express();
 
 // Configure CORS
 const corsOptions = {
-  origin: ["https://www.cashcrewapp.com", "http://localhost:3001"],
+  origin: ["https://www.cashcrewapp.com", "http://localhost", "file://"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
