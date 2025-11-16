@@ -1,0 +1,67 @@
+generator client {
+   provider = "prisma-client-js"
+   output   = "../api/generated/prisma"
+}
+
+datasource db {
+   provider = "postgresql"
+   url      = env("DATABASE_URL")
+}
+
+model transactions {
+   id            String     @id @default(dbgenerated("SUBSTRING(md5((random())::text) FROM 1 FOR 9)")) @db.Char(9)
+   title         String     @db.VarChar(255)
+   description   String?
+   date          String     @db.Char(10)
+   total_amount  Decimal    @db.Decimal(12, 2)
+   currency      String     @db.VarChar(3)
+   date_created  DateTime   @default(now()) @db.Timestamptz(6)
+   date_modified DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+   user_id       String     @db.VarChar(255)
+   category      String     @db.VarChar(255)
+   is_split      Boolean?
+   photo_url     String?    @db.VarChar
+   paid_by       String?    @db.VarChar(255)
+   comments      comments[]
+   splits        splits[]
+
+   @@index([category], map: "idx_category")
+   @@index([date], map: "idx_date")
+   @@index([user_id, date], map: "idx_user_date")
+   @@index([user_id], map: "idx_user_id")
+}
+
+model splits {
+   id             String       @id @default(dbgenerated("SUBSTRING(md5((random())::text) FROM 1 FOR 9)")) @db.Char(9)
+   user_id        String       @db.VarChar(255)
+   transaction_id String       @db.VarChar(9)
+   split_amount   Decimal      @db.Decimal(12, 2)
+   category       String       @db.VarChar(255)
+   transaction    transactions @relation(fields: [transaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transaction")
+}
+
+model comments {
+   id             String       @id @default(dbgenerated("SUBSTRING(md5((random())::text) FROM 1 FOR 9)")) @db.Char(9)
+   transaction_id String       @db.VarChar(9)
+   user_id        String       @db.VarChar(255)
+   comment        String?
+   date_created   DateTime     @default(now()) @db.Timestamptz(6)
+   date_modified  DateTime?    @db.Timestamptz(6)
+   transactions   transactions @relation(fields: [transaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transaction")
+}
+
+model transaction_templates {
+   id            String    @id @db.VarChar(36)
+   name          String    @db.VarChar(100)
+   user_id       String    @db.VarChar(255)
+   title         String?   @db.VarChar(255)
+   description   String?
+   date          DateTime  @db.Date
+   total_amount  Decimal   @db.Decimal(12, 2)
+   currency      String    @db.VarChar(3)
+   date_created  DateTime? @default(now()) @db.Timestamp(6)
+   date_modified DateTime? @db.Timestamp(6)
+   category      String    @db.VarChar(255)
+   is_split      Boolean?
+   icon          String?   @db.Char(1)
+}
