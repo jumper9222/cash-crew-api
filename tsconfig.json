@@ -31,7 +31,8 @@
 		"transpileOnly": true,
 		"require": ["tsconfig-paths/register"],
 		"compilerOptions": {
-			"module": "commonjs"
+			"module": "commonjs",
+			"moduleResolution": "node"
 		}
 	}
 }

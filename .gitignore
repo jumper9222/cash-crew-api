@@ -4,3 +4,4 @@ node_modules
 example.rb
 /api/generated/prisma
 /api/cash-crew-firebase-adminsdk-evdy9-2204670cff.json
+/dist
