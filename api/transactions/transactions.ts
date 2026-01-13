@@ -1,6 +1,6 @@
 import { pool as dbPool } from "../config/database";
 import { Request, Response } from "express";
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from "@/generated/prisma";
 
 const prisma = new PrismaClient();
 
