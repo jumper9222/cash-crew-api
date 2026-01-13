@@ -8,6 +8,9 @@ import {
 	deleteTransaction,
 } from "./transactions/transactions";
 import { fetchTransactionTemplates } from "./transaction-templates/transaction-templates";
+import { fetchGroups } from "./groups/fetchGroups";
+import { createGroup } from "./groups/createGroup";
+import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.middleware";
 
 const app = express();
 
@@ -51,6 +54,9 @@ app.put("/transaction/:transaction_id", updateTransaction); // Handle singular f
 app.delete("/transaction/:user_id/:transaction_id", deleteTransaction); // Handle singular form for backward compatibility
 
 app.get("/transaction-templates/:user_id", fetchTransactionTemplates);
+
+app.get("/groups", firebaseAuthMiddleware, fetchGroups);
+app.post("/groups", createGroup);
 
 const port = 3001;
 app.listen(port, () => {
