@@ -1,41 +1,50 @@
 {
-  "name": "cash-crew-api",
-  "version": "1.0.0",
-  "main": "dist/api/index.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
-    "build": "tsc",
-    "start": "node dist/api/index.ts",
-    "vercel-build": "npm run build"
-  },
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "pg": "^8.13.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/node": "^24.0.13",
-    "@types/pg": "^8.15.4",
-    "nodemon": "^3.1.7"
-  },
-  "nodemonConfig": {
-    "watch": [
-      "api/"
-    ],
-    "ext": "js,ts,json",
-    "ignore": [
-      "node_modules/",
-      "dist/"
-    ],
-    "exec": "ts-node api/index.ts"
-  }
+	"name": "cash-crew-api",
+	"version": "1.0.0",
+	"main": "dist/api/index.ts",
+	"scripts": {
+		"postinstall": "prisma generate",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "nodemon",
+		"build": "tsc",
+		"start": "node dist/api/index.ts",
+		"vercel-build": "npm run build"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@neondatabase/serverless": "^1.0.1",
+		"@prisma/client": "^6.19.0",
+		"cors": "^2.8.5",
+		"dotenv": "^16.6.1",
+		"drizzle-orm": "^0.44.4",
+		"express": "^4.21.2",
+		"firebase-admin": "^13.6.0",
+		"pg": "^8.13.1",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.8.3"
+	},
+	"devDependencies": {
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.3",
+		"@types/node": "^24.0.13",
+		"@types/pg": "^8.15.4",
+		"drizzle-kit": "^0.31.4",
+		"nodemon": "^3.1.7",
+		"prisma": "^6.19.0",
+		"tsconfig-paths": "^4.2.0",
+		"tsx": "^4.20.3"
+	},
+	"nodemonConfig": {
+		"watch": [
+			"api/"
+		],
+		"ext": "js,ts,json",
+		"ignore": [
+			"node_modules/",
+			"dist/"
+		],
+		"exec": "ts-node api/index.ts"
+	}
 }
