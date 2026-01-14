@@ -1,8 +1,6 @@
 import { pool as dbPool } from "../config/database";
 import { Request, Response } from "express";
-import { PrismaClient } from "@/generated/prisma";
-
-const prisma = new PrismaClient();
+import { prisma } from "../config/prisma";
 
 const fetchTransactionsPrisma = async (req: Request, res: Response) => {
 	const { user_id } = req.params;
