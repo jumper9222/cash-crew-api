@@ -1,13 +1,13 @@
 {
 	"name": "cash-crew-api",
 	"version": "1.0.0",
-	"main": "dist/api/index.ts",
+	"main": "dist/src/index.ts",
 	"scripts": {
 		"postinstall": "prisma generate",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "nodemon",
 		"build": "tsc",
-		"start": "node dist/api/index.ts",
+		"start": "node dist/src/index.ts",
 		"vercel-build": "npm run build"
 	},
 	"author": "",
@@ -38,13 +38,13 @@
 	},
 	"nodemonConfig": {
 		"watch": [
-			"api/"
+			"src/"
 		],
 		"ext": "js,ts,json",
 		"ignore": [
 			"node_modules/",
 			"dist/"
 		],
-		"exec": "ts-node api/index.ts"
+		"exec": "ts-node src/index.ts"
 	}
 }

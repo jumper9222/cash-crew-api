@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import { pool } from "./config/database";
 import {
-	fetchTransactions,
 	postTransaction,
 	updateTransaction,
 	deleteTransaction,
@@ -11,6 +10,8 @@ import { fetchTransactionTemplates } from "./transaction-templates/transaction-t
 import { fetchGroups } from "./groups/fetchGroups";
 import { createGroup } from "./groups/createGroup";
 import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.middleware";
+import { updateGroup } from "./groups/updateGroup ";
+import { fetchTransactions } from "./transactions/fetchTransactions";
 
 const app = express();
 
@@ -57,6 +58,12 @@ app.get("/transaction-templates/:user_id", fetchTransactionTemplates);
 
 app.get("/groups", firebaseAuthMiddleware, fetchGroups);
 app.post("/groups", createGroup);
+app.put("/groups", firebaseAuthMiddleware, updateGroup);
+// app.put("/groups/:group_id", firebaseAuthMiddleware, softDeleteGroup);
+
+// app.post("/groups/:group_id", firebaseAuthMiddleware, addGroupMember);
+// app.get("/groups/:group_id", firebaseAuthMiddleware, fetchGroupMembers);
+// app.put("/groups/:group_id", firebaseAuthMiddleware, softDeleteGroupMember);
 
 const port = 3001;
 app.listen(port, () => {

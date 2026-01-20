@@ -1,85 +1,54 @@
 import { pool as dbPool } from "../config/database";
 import { Request, Response } from "express";
-import { prisma } from "../config/prisma";
 
-const fetchTransactionsPrisma = async (req: Request, res: Response) => {
-	const { user_id } = req.params;
-	const { latestDateModified } = req.query;
+// const fetchTransactions = async (req: Request, res: Response) => {
+// 	const client = await dbPool.connect();
+// 	const { user_id } = req.params;
+// 	const { latestDateModified } = req.query;
 
-	try {
-		const transactions = await prisma.transactions.findMany({
-			where: {
-				OR: [
-					{ user_id: user_id },
-					{ paid_by: user_id },
-					{ splits: { some: { user_id: user_id } } },
-				],
-				date_modified: { gt: latestDateModified as string },
-			},
-			include: { splits: true },
-			orderBy: { date: "desc" },
-		});
-		console.log("Fetched transactions using Prisma:", transactions);
-		res.status(200).json(transactions);
-	} catch (error) {
-		console.error("Error fetching transactions", error);
-		res.status(500).json({
-			error: {
-				message: "Error fetching transactions",
-				details: error,
-			},
-		});
-	}
-};
-
-const fetchTransactions = async (req: Request, res: Response) => {
-	const client = await dbPool.connect();
-	const { user_id } = req.params;
-	const { latestDateModified } = req.query;
-
-	try {
-		const response = await client.query(
-			`SELECT DISTINCT
-            t.id AS transaction_id, 
-            t.title, 
-            t.description, 
-            t.date, 
-            t.total_amount,
-            t.currency,
-            t.user_id,
-            t.paid_by,
-            t.category,
-            t.date_modified,
-            t.is_split,
-            t.photo_url,
-            s.id AS split_id,
-            s.user_id AS split_uid,
-            s.split_amount, 
-            s.category AS split_category
-            FROM transactions t
-            LEFT JOIN splits s ON t.id = s.transaction_id
-            WHERE t.date_modified > $2::timestamp
-            AND t.id IN (
-               SELECT DISTINCT t2.id 
-               FROM transactions t2
-               LEFT JOIN splits s2 ON t2.id = s2.transaction_id
-               WHERE (
-                  t2.user_id = $1 OR 
-                  t2.paid_by = $1 OR 
-                  s2.user_id = $1
-               )
-            )
-            ORDER BY t.date DESC`,
-			[user_id, latestDateModified]
-		);
-		res.status(200).json(response.rows);
-	} catch (error) {
-		console.error("Error executing query", error.stack);
-		res.status(500).json({ error: "Error fetching transactions" });
-	} finally {
-		client.release();
-	}
-};
+// 	try {
+// 		const response = await client.query(
+// 			`SELECT DISTINCT
+//             t.id AS transaction_id,
+//             t.title,
+//             t.description,
+//             t.date,
+//             t.total_amount,
+//             t.currency,
+//             t.user_id,
+//             t.paid_by,
+//             t.category,
+//             t.date_modified,
+//             t.is_split,
+//             t.photo_url,
+//             s.id AS split_id,
+//             s.user_id AS split_uid,
+//             s.split_amount,
+//             s.category AS split_category
+//             FROM transactions t
+//             LEFT JOIN splits s ON t.id = s.transaction_id
+//             WHERE t.date_modified > $2::timestamp
+//             AND t.id IN (
+//                SELECT DISTINCT t2.id
+//                FROM transactions t2
+//                LEFT JOIN splits s2 ON t2.id = s2.transaction_id
+//                WHERE (
+//                   t2.user_id = $1 OR
+//                   t2.paid_by = $1 OR
+//                   s2.user_id = $1
+//                )
+//             )
+//             ORDER BY t.date DESC`,
+// 			[user_id, latestDateModified]
+// 		);
+// 		res.status(200).json(response.rows);
+// 	} catch (error) {
+// 		console.error("Error executing query", error.stack);
+// 		res.status(500).json({ error: "Error fetching transactions" });
+// 	} finally {
+// 		client.release();
+// 	}
+// };
 
 const postSplit = async (client, split, transaction_id) => {
 	const { userId, amount, category } = split;
@@ -323,12 +292,7 @@ const deleteTransaction = async (req: Request, res: Response) => {
 	}
 };
 
-export {
-	fetchTransactions,
-	postTransaction,
-	updateTransaction,
-	deleteTransaction,
-};
+export { postTransaction, updateTransaction, deleteTransaction };
 
 // fetchTransactionsPrisma(
 // 	{
