@@ -8,7 +8,7 @@ datasource db {
 }
 
 model transactions {
-  id            String     @id @default(dbgenerated("SUBSTRING(md5((random())::text) FROM 1 FOR 9)")) @db.Char(9)
+  id            String     @id @default(dbgenerated("gen_random_uuid()"))
   title         String     @db.VarChar(255)
   description   String?
   date          String     @db.Char(10)
@@ -74,6 +74,8 @@ model group_members {
   role      String   @db.VarChar(100)
   joined_at DateTime @default(now()) @db.Timestamp(6)
   groups    groups   @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_id_fk")
+
+  @@unique([group_id, user_id], map: "unique_group_user")
 }
 
 model groups {
@@ -83,6 +85,7 @@ model groups {
   date_created  DateTime        @default(now()) @db.Timestamp(6)
   date_modified DateTime        @default(now()) @db.Timestamp(6)
   group_type    String          @db.VarChar(100)
+  icon          String?         @default("👥") @db.Char(1)
   group_members group_members[]
   transactions  transactions[]
 }
