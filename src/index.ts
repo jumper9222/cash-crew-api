@@ -1,17 +1,15 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
 import { pool } from "./config/database";
-import {
-	postTransaction,
-	updateTransaction,
-	deleteTransaction,
-} from "./transactions/transactions";
-import { fetchTransactionTemplates } from "./transaction-templates/transaction-templates";
-import { fetchGroups } from "./groups/fetchGroups";
 import { createGroup } from "./groups/createGroup";
-import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.middleware";
+import { fetchGroups } from "./groups/fetchGroups";
 import { updateGroup } from "./groups/updateGroup ";
+import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.middleware";
+import { fetchTransactionTemplates } from "./transaction-templates/transaction-templates";
 import { fetchTransactions } from "./transactions/fetchTransactions";
+import { postTransaction } from "./transactions/postTransaction";
+import { deleteTransaction } from "./transactions/transactions";
+import { updateTransaction } from "./transactions/updateTransaction";
 
 const app = express();
 
@@ -38,7 +36,7 @@ async function getPostgresVersion() {
 
 getPostgresVersion().catch(console.error);
 
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
 	res.send("If you see this, the API is working!");
 });
 

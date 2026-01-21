@@ -33,8 +33,15 @@ const handlePost = async (req: Request, res: Response) => {
 	try {
 		const transactionResponse = await prisma.$transaction(async (tx) => {
 			const transactionResponse = await addTransaction(tx, transaction);
-			await addSplits(tx, splits, transactionResponse.id);
-			return transactionResponse;
+			const splitsResponse = await addSplits(
+				tx,
+				splits,
+				transactionResponse.id
+			);
+			return {
+				...transactionResponse,
+				splits: splitsResponse,
+			};
 		});
 		console.log("Posted transaction using Prisma:", transactionResponse);
 		return res.status(201).json(transactionResponse);

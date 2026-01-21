@@ -8,23 +8,22 @@ datasource db {
 }
 
 model transactions {
-  id            String     @id @default(dbgenerated("gen_random_uuid()"))
-  title         String     @db.VarChar(255)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String   @db.VarChar(255)
   description   String?
-  date          String     @db.Char(10)
-  total_amount  Decimal    @db.Decimal(12, 2)
-  currency      String     @db.VarChar(3)
-  date_created  DateTime   @default(now()) @db.Timestamptz(6)
-  date_modified DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
-  user_id       String     @db.VarChar(255)
-  category      String     @db.VarChar(255)
+  date          String   @db.Char(10)
+  total_amount  Decimal  @db.Decimal(12, 2)
+  currency      String   @db.VarChar(3)
+  date_created  DateTime @default(now()) @db.Timestamptz(6)
+  date_modified DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  user_id       String   @db.VarChar(255)
+  category      String   @db.VarChar(255)
   is_split      Boolean?
-  photo_url     String?    @db.VarChar
-  paid_by       String?    @db.VarChar(255)
-  group_id      String?    @db.Uuid
-  comments      comments[]
+  photo_url     String?  @db.VarChar
+  paid_by       String?  @db.VarChar(255)
+  group_id      String?  @db.Uuid
   splits        splits[]
-  groups        groups?    @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_id_fk")
+  groups        groups?  @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_id_fk")
 
   @@index([category], map: "idx_category")
   @@index([date], map: "idx_date")
@@ -33,26 +32,18 @@ model transactions {
 }
 
 model splits {
-  id             String       @id @default(dbgenerated("SUBSTRING(md5((random())::text) FROM 1 FOR 9)")) @db.Char(9)
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id        String       @db.VarChar(255)
-  transaction_id String       @db.VarChar(9)
+  transaction_id String       @db.Uuid
   split_amount   Decimal      @db.Decimal(12, 2)
   category       String       @db.VarChar(255)
   transaction    transactions @relation(fields: [transaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transaction")
-}
 
-model comments {
-  id             String       @id @default(dbgenerated("SUBSTRING(md5((random())::text) FROM 1 FOR 9)")) @db.Char(9)
-  transaction_id String       @db.VarChar(9)
-  user_id        String       @db.VarChar(255)
-  comment        String?
-  date_created   DateTime     @default(now()) @db.Timestamptz(6)
-  date_modified  DateTime?    @db.Timestamptz(6)
-  transactions   transactions @relation(fields: [transaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transaction")
+  @@unique([transaction_id, user_id], map: "transaction_id_user_id")
 }
 
 model transaction_templates {
-  id            String    @id @db.VarChar(36)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String    @db.VarChar(100)
   user_id       String    @db.VarChar(255)
   title         String    @db.VarChar(255)
