@@ -44,7 +44,7 @@ const deleteTransaction = async (req: Request, res: Response) => {
 	}
 };
 
-export { postTransaction, updateTransaction, deleteTransaction };
+export { deleteTransaction };
 
 // fetchTransactionsPrisma(
 // 	{
