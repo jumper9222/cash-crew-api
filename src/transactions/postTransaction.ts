@@ -1,4 +1,4 @@
-import { prisma } from "config/prisma";
+import { prisma } from "../config/prisma";
 import { handleError } from "../utility/errorHandlers";
 import { Prisma } from "@prisma/client";
 import { Request, Response } from "express";
