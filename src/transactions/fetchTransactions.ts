@@ -1,4 +1,4 @@
-import { prisma } from "@/config/prisma";
+import { prisma } from "../config/prisma";
 import { Request, Response } from "express";
 
 const fetchTransactions = async (user_id: string, date_modified?: string) => {

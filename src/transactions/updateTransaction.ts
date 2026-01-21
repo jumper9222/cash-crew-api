@@ -1,11 +1,11 @@
-import { prisma } from "@/config/prisma";
-import { handleError } from "@/utility/errorHandlers";
+import { prisma } from "../config/prisma";
+import { handleError } from "../utility/errorHandlers";
 import { Prisma, splits, transactions } from "@prisma/client";
 import { Request, Response } from "express";
 
 const updateTransaction = async (
 	tx: Prisma.TransactionClient,
-	transaction: transactions
+	transaction: transactions,
 ) => {
 	const response = await tx.transactions.update({
 		where: { id: transaction.id },
@@ -17,7 +17,7 @@ const updateTransaction = async (
 const upsertSplits = async (
 	tx: Prisma.TransactionClient,
 	splits: splits[],
-	transaction_id: string
+	transaction_id: string,
 ) => {
 	const response = await Promise.all(
 		splits.map((split) =>
@@ -30,15 +30,15 @@ const upsertSplits = async (
 				},
 				update: split,
 				create: { ...split, transaction_id },
-			})
-		)
+			}),
+		),
 	);
 	return response;
 };
 
 const deleteSplits = async (
 	tx: Prisma.TransactionClient,
-	splitIds: string[]
+	splitIds: string[],
 ) => {
 	const response = await tx.splits.deleteMany({
 		where: { id: { in: splitIds } },

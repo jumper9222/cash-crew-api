@@ -1,11 +1,11 @@
-import { prisma } from "@/config/prisma";
-import { handleError } from "@/utility/errorHandlers";
+import { prisma } from "config/prisma";
+import { handleError } from "../utility/errorHandlers";
 import { Prisma } from "@prisma/client";
 import { Request, Response } from "express";
 
 const addTransaction = (
 	tx: Prisma.TransactionClient,
-	data: Prisma.transactionsCreateInput
+	data: Prisma.transactionsCreateInput,
 ) => {
 	const response = tx.transactions.create({ data });
 	return response;
@@ -16,7 +16,7 @@ type SplitsPayload = Omit<Prisma.splitsCreateManyInput, "transaction_id">[];
 const addSplits = (
 	tx: Prisma.TransactionClient,
 	splits: SplitsPayload,
-	transaction_id: string
+	transaction_id: string,
 ) => {
 	const data = splits.map((split) => ({ transaction_id, ...split }));
 	const response = tx.splits.createManyAndReturn({ data });
@@ -36,7 +36,7 @@ const handlePost = async (req: Request, res: Response) => {
 			const splitsResponse = await addSplits(
 				tx,
 				splits,
-				transactionResponse.id
+				transactionResponse.id,
 			);
 			return {
 				...transactionResponse,
