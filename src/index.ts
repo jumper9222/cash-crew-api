@@ -1,4 +1,3 @@
-import "tsconfig-paths/register";
 import cors from "cors";
 import express from "express";
 import { pool } from "./config/database";

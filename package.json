@@ -6,7 +6,7 @@
 		"postinstall": "prisma generate",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "nodemon",
-		"build": "tsc",
+		"build": "tsc && tsc-alias",
 		"start": "node --require tsconfig-paths/register dist/src/index.ts",
 		"vercel-build": "npm run build"
 	},
@@ -14,7 +14,6 @@
 	"license": "ISC",
 	"description": "",
 	"dependencies": {
-		"tsconfig-paths": "^4.2.0",
 		"@neondatabase/serverless": "^1.0.1",
 		"@prisma/client": "^6.19.0",
 		"cors": "^2.8.5",
@@ -34,6 +33,7 @@
 		"drizzle-kit": "^0.31.4",
 		"nodemon": "^3.1.7",
 		"prisma": "^6.19.0",
+		"tsc-alias": "^1.8.16",
 		"tsconfig-paths": "^4.2.0",
 		"tsx": "^4.20.3"
 	},
