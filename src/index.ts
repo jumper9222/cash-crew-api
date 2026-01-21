@@ -64,9 +64,11 @@ app.put("/groups", firebaseAuthMiddleware, updateGroup);
 // app.get("/groups/:group_id", firebaseAuthMiddleware, fetchGroupMembers);
 // app.put("/groups/:group_id", firebaseAuthMiddleware, softDeleteGroupMember);
 
-const port = 3001;
-app.listen(port, () => {
-	console.log(`Server is running on port ${port}`);
-});
+if (process.env.NODE_ENV !== "production") {
+	const port = 3001;
+	app.listen(port, () => {
+		console.log(`Server is running on port ${port}`);
+	});
+}
 
 export default app;
