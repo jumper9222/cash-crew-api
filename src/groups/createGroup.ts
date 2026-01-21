@@ -1,18 +1,10 @@
 import { handleError } from "../utility/errorHandlers";
 import { prisma } from "../config/prisma";
+import { Group, GroupData, Member } from "./groupTypes";
 
-type Member = { user_id: string; role: string };
 type AddMemberPayload = Member & { group_id: string };
 
-type GroupData = {
-	name: string;
-	// description: string;
-	created_by: string;
-	group_type: string;
-	group_members: Member[];
-};
-
-const addGroup = async (groupData: Omit<GroupData, "group_members">) => {
+const addGroup = async (groupData: Group) => {
 	try {
 		const group = await prisma.groups.create({
 			data: groupData,

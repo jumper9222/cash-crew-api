@@ -4,7 +4,7 @@ export const firebaseAuthMiddleware = async (req, res, next) => {
 	const authHeader = req.headers.authorization;
 	const idToken = authHeader.split(" ")[1];
 
-	console.log("Running firebase auth middleware", idToken);
+	console.log("Running firebase auth middleware");
 
 	if (!authHeader?.startsWith("Bearer ") || !idToken) {
 		return res.status(401).json({ message: "Missing token" });
