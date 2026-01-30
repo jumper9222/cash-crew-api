@@ -47,6 +47,7 @@ const deleteSplits = async (
 };
 
 const handlePut = async (req: Request, res: Response) => {
+	const user_id = req.user.firebaseUid;
 	const { splits, deleted_splits, ...transaction } = req.body;
 	const date_modified = new Date();
 	transaction.date_modified = date_modified;

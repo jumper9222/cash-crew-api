@@ -34,7 +34,7 @@ const fetchTransactions = async (user_id: string, date_modified?: string) => {
 };
 
 const handleGet = async (req: Request, res: Response) => {
-	const { user_id } = req.params;
+	const user_id = req.user.firebaseUid;
 	const { latestDateModified } = req.query;
 
 	try {

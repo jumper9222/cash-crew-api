@@ -24,7 +24,7 @@
 			"@/*": ["*"]
 		}
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "src/types/express.d.ts"],
 	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
 	"ts-node": {
 		"files": true,
