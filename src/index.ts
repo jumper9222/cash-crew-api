@@ -8,7 +8,7 @@ import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.middleware";
 import { fetchTransactionTemplates } from "./transaction-templates/transaction-templates";
 import { fetchTransactions } from "./transactions/fetchTransactions";
 import { postTransaction } from "./transactions/postTransaction";
-import { deleteTransaction } from "./transactions/transactions";
+import { deleteTransaction } from "./transactions/deleteTransaction";
 import { updateTransaction } from "./transactions/updateTransaction";
 
 const app = express();
@@ -42,16 +42,24 @@ app.get("/", (_, res) => {
 });
 
 // Fetch all transactions and splits associated to user
-app.get("/transactions/:user_id", fetchTransactions);
+app.get("/transactions/:user_id", firebaseAuthMiddleware, fetchTransactions);
 
 // Post transaction and post splits conditionally
-app.post("/transaction/:user_id", postTransaction); // Handle singular form for backward compatibility
+app.post("/transaction/:user_id", firebaseAuthMiddleware, postTransaction); // Handle singular form for backward compatibility
 
 // Update transaction and update/create/delete splits conditionally
-app.put("/transaction/:transaction_id", updateTransaction); // Handle singular form for backward compatibility
+app.put(
+	"/transaction/:transaction_id",
+	firebaseAuthMiddleware,
+	updateTransaction,
+); // Handle singular form for backward compatibility
 
 // Delete transaction and delete splits conditionally
-app.delete("/transaction/:user_id/:transaction_id", deleteTransaction); // Handle singular form for backward compatibility
+app.delete(
+	"/transaction/:transaction_id",
+	firebaseAuthMiddleware,
+	deleteTransaction,
+); // Handle singular form for backward compatibility
 
 app.get("/transaction-templates/:user_id", fetchTransactionTemplates);
 

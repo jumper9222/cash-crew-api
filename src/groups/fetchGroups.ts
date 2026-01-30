@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { handleError } from "../utility/errorHandlers";
+import { Response, Request } from "express";
 
 const fetchGroups = async (user_id: string) => {
 	try {
@@ -20,7 +21,7 @@ const fetchGroups = async (user_id: string) => {
 	}
 };
 
-const handleGet = async (req, res) => {
+const handleGet = async (req: Request, res: Response) => {
 	const userId = req.user.firebaseUid;
 	try {
 		const groups = await fetchGroups(userId);

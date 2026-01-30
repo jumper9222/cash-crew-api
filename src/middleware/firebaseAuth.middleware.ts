@@ -1,6 +1,11 @@
 import admin from "../firebase";
+import { NextFunction, Request, Response } from "express";
 
-export const firebaseAuthMiddleware = async (req, res, next) => {
+export const firebaseAuthMiddleware = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	const authHeader = req.headers.authorization;
 	const idToken = authHeader.split(" ")[1];
 
