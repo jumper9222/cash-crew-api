@@ -42,10 +42,10 @@ app.get("/", (_, res) => {
 });
 
 // Fetch all transactions and splits associated to user
-app.get("/transactions/:user_id", firebaseAuthMiddleware, fetchTransactions);
+app.get("/transactions", firebaseAuthMiddleware, fetchTransactions);
 
 // Post transaction and post splits conditionally
-app.post("/transaction/:user_id", firebaseAuthMiddleware, postTransaction); // Handle singular form for backward compatibility
+app.post("/transaction", firebaseAuthMiddleware, postTransaction); // Handle singular form for backward compatibility
 
 // Update transaction and update/create/delete splits conditionally
 app.put(

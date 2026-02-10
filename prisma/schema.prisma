@@ -23,7 +23,7 @@ model transactions {
   paid_by       String?  @db.VarChar(255)
   group_id      String?  @db.Uuid
   splits        splits[]
-  groups        groups?  @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_id_fk")
+  groups        groups?  @relation(fields: [group_id], references: [id], onDelete: NoAction, map: "group_id_fk")
 
   @@index([category], map: "idx_category")
   @@index([date], map: "idx_date")
@@ -37,7 +37,9 @@ model splits {
   transaction_id String       @db.Uuid
   split_amount   Decimal      @db.Decimal(12, 2)
   category       String       @db.VarChar(255)
-  transaction    transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_transaction")
+  group_id       String?      @db.Uuid
+  groups         groups?      @relation(fields: [group_id], references: [id], onDelete: NoAction, map: "fk_group")
+  transaction    transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade, map: "fk_transaction")
 
   @@unique([transaction_id, user_id], map: "transaction_id_user_id")
 }
@@ -64,7 +66,7 @@ model group_members {
   group_id  String   @db.Uuid
   role      String   @db.VarChar(100)
   joined_at DateTime @default(now()) @db.Timestamp(6)
-  groups    groups   @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "group_id_fk")
+  groups    groups   @relation(fields: [group_id], references: [id], onDelete: NoAction, map: "group_id_fk")
 
   @@unique([group_id, user_id], map: "unique_group_user")
 }
@@ -78,5 +80,6 @@ model groups {
   group_type    String          @db.VarChar(100)
   icon          String?         @default("👥") @db.Char(1)
   group_members group_members[]
+  splits        splits[]
   transactions  transactions[]
 }
