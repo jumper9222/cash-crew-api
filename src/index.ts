@@ -1,14 +1,15 @@
 import cors from "cors";
 import express from "express";
 import { pool } from "./config/database";
+import { addGroupMembersEndpoint } from "./groups/addGroupMembers";
 import { createGroup } from "./groups/createGroup";
 import { fetchGroups } from "./groups/fetchGroups";
 import { updateGroup } from "./groups/updateGroup ";
 import { firebaseAuthMiddleware } from "./middleware/firebaseAuth.middleware";
 import { fetchTransactionTemplates } from "./transaction-templates/transaction-templates";
+import { deleteTransaction } from "./transactions/deleteTransaction";
 import { fetchTransactions } from "./transactions/fetchTransactions";
 import { postTransaction } from "./transactions/postTransaction";
-import { deleteTransaction } from "./transactions/deleteTransaction";
 import { updateTransaction } from "./transactions/updateTransaction";
 
 const app = express();
@@ -64,11 +65,15 @@ app.delete(
 app.get("/transaction-templates/:user_id", fetchTransactionTemplates);
 
 app.get("/groups", firebaseAuthMiddleware, fetchGroups);
-app.post("/groups", createGroup);
+app.post("/groups", firebaseAuthMiddleware, createGroup);
 app.put("/groups", firebaseAuthMiddleware, updateGroup);
 // app.put("/groups/:group_id", firebaseAuthMiddleware, softDeleteGroup);
 
-// app.post("/groups/:group_id", firebaseAuthMiddleware, addGroupMember);
+app.post(
+	"/group/:group_id/member",
+	firebaseAuthMiddleware,
+	addGroupMembersEndpoint,
+);
 // app.get("/groups/:group_id", firebaseAuthMiddleware, fetchGroupMembers);
 // app.put("/groups/:group_id", firebaseAuthMiddleware, softDeleteGroupMember);
 

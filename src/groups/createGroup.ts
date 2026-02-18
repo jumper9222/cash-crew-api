@@ -1,8 +1,8 @@
 import { handleError } from "../utility/errorHandlers";
 import { prisma } from "../config/prisma";
 import { Group, GroupData, Member } from "./groupTypes";
-
-type AddMemberPayload = Member & { group_id: string };
+import { Request, Response } from "express";
+import { addGroupMembers } from "./addGroupMembers";
 
 const addGroup = async (groupData: Group) => {
 	try {
@@ -16,29 +16,17 @@ const addGroup = async (groupData: Group) => {
 	}
 };
 
-const addGroupMember = async (memberData: AddMemberPayload) => {
-	try {
-		const groupMember = await prisma.group_members.create({
-			data: memberData,
-		});
-		return groupMember;
-	} catch (error) {
-		console.error("Error adding group member to the database", error.message);
-	}
-};
-
-const handlePost = async (req, res) => {
+const handlePost = async (req: Request, res: Response) => {
 	const { group_members, ...group }: GroupData = req.body;
 	try {
 		console.log(
-			`Handling POST request for adding new group from user ${group.created_by}`
+			`Handling POST request for adding new group from user ${group.created_by}`,
 		);
 		const groupResponse = await addGroup(group);
 
-		const membersResponse = await Promise.all(
-			group_members.map((member) =>
-				addGroupMember({ ...member, group_id: groupResponse.id })
-			)
+		const membersResponse = await addGroupMembers(
+			group_members,
+			groupResponse.id,
 		);
 
 		return res
