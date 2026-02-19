@@ -1,12 +1,13 @@
 import { prisma } from "../config/prisma";
 import { handleError } from "../utility/errorHandlers";
-import { Prisma } from "@prisma/client";
+import { Prisma, transactions } from "@prisma/client";
 import { Request, Response } from "express";
 
-const addTransaction = (
-	tx: Prisma.TransactionClient,
-	data: Prisma.transactionsCreateInput,
-) => {
+const addTransaction = (tx: Prisma.TransactionClient, data: transactions) => {
+	if (data.group_id === "") {
+		console.log("Nullifying group_id");
+		data.group_id = null;
+	}
 	const response = tx.transactions.create({ data });
 	return response;
 };
@@ -23,7 +24,7 @@ const addSplits = (
 	return response;
 };
 
-type CreateTransactionPayload = Prisma.transactionsCreateInput & {
+type CreateTransactionPayload = transactions & {
 	splits: SplitsPayload;
 };
 
@@ -50,7 +51,7 @@ const handlePost = async (req: Request, res: Response) => {
 			res,
 			e,
 			serverMessage: "Error posting transaction",
-			payload: { user_id: req.params.user_id, body: req.body },
+			payload: { body: req.body },
 			status: 500,
 		};
 		handleError(error);
